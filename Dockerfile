@@ -17,6 +17,21 @@ RUN mvn clean package -DskipTests
 # Runtime stage with OpenLiberty
 FROM openliberty/open-liberty:25.0.0.6-full-java21-openj9-ubi-minimal
 
+# Add labels
+LABEL maintainer="Daniel Istrate" \
+      description="MongoDB Troubleshooting Tool in OpenLiberty" \
+      version="1.0.0" \
+      tools="mongosh,curl,wget,telnet,nc,nmap,tcpdump,traceroute,dig,nslookup"
+
+# Set environment variables for Liberty logging
+# Ensure all logs go to console (stdout) for pod visibility in plain text format
+ENV WLP_LOGGING_CONSOLE_FORMAT=simple \
+    WLP_LOGGING_CONSOLE_LOGLEVEL=info \
+    WLP_LOGGING_CONSOLE_SOURCE=message,trace,accessLog,ffdc,audit \
+    WLP_LOGGING_MESSAGE_FORMAT=simple \
+    WLP_LOGGING_MESSAGE_SOURCE=message,trace,accessLog,ffdc,audit \
+    APP_NAME="MongoDB Troubleshooting Tool"
+
 # Install network troubleshooting tools and MongoDB shell
 USER root
 
@@ -137,21 +152,6 @@ EXPOSE 9080 9443
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
   CMD curl -f http://localhost:9080/health || exit 1
-
-# Set environment variables for Liberty logging
-# Ensure all logs go to console (stdout) for pod visibility in plain text format
-ENV WLP_LOGGING_CONSOLE_FORMAT=simple \
-    WLP_LOGGING_CONSOLE_LOGLEVEL=info \
-    WLP_LOGGING_CONSOLE_SOURCE=message,trace,accessLog,ffdc,audit \
-    WLP_LOGGING_MESSAGE_FORMAT=simple \
-    WLP_LOGGING_MESSAGE_SOURCE=message,trace,accessLog,ffdc,audit \
-    APP_NAME="MongoDB Troubleshooting Tool"
-
-# Add labels
-LABEL maintainer="Daniel Istrate" \
-      description="MongoDB Troubleshooting Tool in OpenLiberty" \
-      version="1.0.0" \
-      tools="mongosh,curl,wget,telnet,nc,nmap,tcpdump,traceroute,dig,nslookup"
 
 # Run Liberty server
 CMD ["/opt/ol/wlp/bin/server", "run", "defaultServer"]
