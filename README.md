@@ -347,7 +347,7 @@ Contributions are welcome! Please ensure:
 
 ## License
 
-[Your License Here]
+Free to use
 
 ## Support
 
@@ -355,12 +355,3 @@ For issues and questions:
 - Check the troubleshooting section
 - Review container logs
 - Use the included network diagnostic tools
-
-## Version History
-
-- **1.0.0** - Initial release
-  - MongoDB connection testing
-  - Query execution
-  - Statistics viewing
-  - Network troubleshooting tools
-  - mongosh integration
