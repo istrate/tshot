@@ -20,7 +20,7 @@ FROM openliberty/open-liberty:25.0.0.6-full-java21-openj9-ubi-minimal
 # Add labels
 LABEL maintainer="Daniel Istrate" \
       description="MongoDB Troubleshooting Tool in OpenLiberty" \
-      version="1.0.0" \
+      version="1.0.6" \
       tools="mongosh,curl,wget,telnet,nc,nmap,tcpdump,traceroute,dig,nslookup"
 
 # Set environment variables for Liberty logging
