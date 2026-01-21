@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  mongo-troubleshoot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: quay.io/istrate/mongo-troubleshoot:latest
+    container_name: mongo-troubleshoot
+    ports:
+      - "9080:9080"
+      - "9443:9443"
+    environment:
+      - WLP_LOGGING_CONSOLE_FORMAT=simple
+      - WLP_LOGGING_CONSOLE_LOGLEVEL=info
+      - WLP_LOGGING_CONSOLE_SOURCE=message,trace,accessLog,ffdc,audit
+      - WLP_LOGGING_MESSAGE_FORMAT=simple
+      - WLP_LOGGING_MESSAGE_SOURCE=message,trace,accessLog,ffdc,audit
+      - APP_NAME=MongoDB Troubleshooting Tool
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    networks:
+      - troubleshoot-network
+
+  # Optional: MongoDB instance for testing
+  mongodb:
+    image: mongo:7.0
+    container_name: test-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=password123
+    volumes:
+      - mongodb-data:/data/db
+    networks:
+      - troubleshoot-network
+    restart: unless-stopped
+
+networks:
+  troubleshoot-network:
+    driver: bridge
+
+volumes:
+  mongodb-data:
+    driver: local
