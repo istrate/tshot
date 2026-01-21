@@ -323,7 +323,10 @@ tshot/
 │   ├── main/
 │   │   ├── java/
 │   │   │   └── com/ibm/mas/tshot/
-│   │   │       └── MongoTroubleshootServlet.java
+│   │   │       ├── MongoTroubleshootServlet.java
+│   │   │       ├── CertificateManager.java
+│	 │   │       ├── CertificateUploadServlet.java
+│   │   │       └── ConfigServlet.java
 │   │   ├── liberty/
 │   │   │   └── config/
 │   │   │       └── server.xml
