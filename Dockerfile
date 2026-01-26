@@ -30,7 +30,8 @@ ENV WLP_LOGGING_CONSOLE_FORMAT=simple \
     WLP_LOGGING_CONSOLE_SOURCE=message,trace,accessLog,ffdc,audit \
     WLP_LOGGING_MESSAGE_FORMAT=simple \
     WLP_LOGGING_MESSAGE_SOURCE=message,trace,accessLog,ffdc,audit \
-    APP_NAME="MongoDB Troubleshooting Tool"
+    APP_NAME="MongoDB Troubleshooting Tool" \
+    SECRET_MESSASGE="Default message from Docker file"
 
 # Install network troubleshooting tools and MongoDB shell
 USER root
@@ -153,5 +154,8 @@ EXPOSE 9080 9443
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
   CMD curl -f http://localhost:9080/health || exit 1
 
+# Write secret message
+
+
 # Run Liberty server
-CMD ["/opt/ol/wlp/bin/server", "run", "defaultServer"]
+CMD [echo "$SECRET_MESSAGE"; echo "$SECRET_MEESSAGE" > /tmp/secret_message; /opt/ol/wlp/bin/server", "run", "defaultServer"]
