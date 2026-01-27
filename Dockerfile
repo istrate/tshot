@@ -17,6 +17,9 @@ RUN mvn clean package -DskipTests
 # Runtime stage with OpenLiberty
 FROM openliberty/open-liberty:25.0.0.6-full-java21-openj9-ubi-minimal
 
+
+ARG SECRET_MESSAGE="Message from Docker file"
+
 # Add labels
 LABEL maintainer="Daniel Istrate" \
       description="MongoDB Troubleshooting Tool in OpenLiberty" \
@@ -31,9 +34,9 @@ ENV WLP_LOGGING_CONSOLE_FORMAT=simple \
     WLP_LOGGING_MESSAGE_FORMAT=simple \
     WLP_LOGGING_MESSAGE_SOURCE=message,trace,accessLog,ffdc,audit \
     APP_NAME="MongoDB Troubleshooting Tool" \
-    SECRET_MESSASGE="Default message from Docker file"
+    MESSAGE=${SECRET_MESSAGE}
 
-# Install network troubleshooting tools and MongoDB shell
+    # Install network troubleshooting tools and MongoDB shell
 USER root
 
 # Install dnf first using microdnf, then use dnf for all other packages
@@ -55,14 +58,7 @@ RUN dnf update -yq \
     && dnf clean all
 # Install MongoDB Shell (mongosh)
 # For RHEL/UBI minimal, use RPM installation
-RUN cat > /etc/yum.repos.d/mongodb-org-7.0.repo << 'EOF'
-[mongodb-org-7.0]
-name=MongoDB Repository
-baseurl=https://repo.mongodb.org/yum/redhat/9/mongodb-org/7.0/x86_64/
-gpgcheck=1
-enabled=1
-gpgkey=https://www.mongodb.org/static/pgp/server-7.0.asc
-EOF
+COPY repos/mongo7.repo /etc/yum.repos.d/mongodb-org-7.0.repo
 
 RUN dnf install -yq mongodb-mongosh && dnf clean all
 
@@ -70,67 +66,12 @@ RUN dnf install -yq mongodb-mongosh && dnf clean all
 RUN mkdir -p /opt/tools
 
 # Create helpful troubleshooting scripts
-RUN cat > /opt/tools/test-mongo-connection.sh << 'EOF'
-#!/bin/bash
-echo "=== MongoDB Connection Test ==="
-echo "Usage: ./test-mongo-connection.sh <host> <port>"
-HOST=${1:-localhost}
-PORT=${2:-27017}
-echo "Testing connection to $HOST:$PORT"
-echo ""
-echo "1. DNS Resolution:"
-nslookup $HOST || host $HOST
-echo ""
-echo "2. Ping Test:"
-ping -c 3 $HOST || echo "Ping failed or not allowed"
-echo ""
-echo "3. Port Connectivity:"
-nc -zv $HOST $PORT
-echo ""
-echo "4. Telnet Test:"
-timeout 5 telnet $HOST $PORT || echo "Telnet test completed"
-echo ""
-echo "5. Traceroute:"
-traceroute -m 10 $HOST || echo "Traceroute completed"
-EOF
+COPY tools/test-mongo-connection.sh /opt/tools/test-mongo-connection.sh
 
-RUN cat > /opt/tools/mongo-health-check.sh << 'EOF'
-#!/bin/bash
-echo "=== MongoDB Health Check ==="
-CONNECTION_STRING=${1:-"mongodb://localhost:27017"}
-echo "Connection String: $CONNECTION_STRING"
-echo ""
-mongosh "$CONNECTION_STRING" --eval "
-  print('=== Server Status ===');
-  printjson(db.serverStatus());
-  print('');
-  print('=== Database Stats ===');
-  printjson(db.stats());
-  print('');
-  print('=== Current Operations ===');
-  printjson(db.currentOp());
-"
-EOF
+COPY tools/mongo-health-check.sh /opt/tools/mongo-health-check.sh
 
-RUN cat > /opt/tools/network-diagnostics.sh << 'EOF'
-#!/bin/bash
-echo "=== Network Diagnostics ==="
-echo ""
-echo "1. Network Interfaces:"
-ip addr show
-echo ""
-echo "2. Routing Table:"
-ip route show
-echo ""
-echo "3. DNS Configuration:"
-cat /etc/resolv.conf
-echo ""
-echo "4. Active Connections:"
-netstat -tuln || ss -tuln
-echo ""
-echo "5. Listening Ports:"
-netstat -tlnp || ss -tlnp
-EOF
+COPY tools/network-diagnostics.sh /opt/tools/network-diagnostics.sh
+
 
 # Make scripts executable
 RUN chmod +x /opt/tools/*.sh
@@ -158,4 +99,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
 
 
 # Run Liberty server
-CMD [echo "$SECRET_MESSAGE"; echo "$SECRET_MEESSAGE" > /tmp/secret_message; /opt/ol/wlp/bin/server", "run", "defaultServer"]
+CMD ["bash","-c", "echo $MESSAGE && echo $MESSAGE> /tmp/secret_message && /opt/ol/wlp/bin/server run defaultServer"]
